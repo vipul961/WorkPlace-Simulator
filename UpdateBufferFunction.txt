@@ -1,0 +1,83 @@
+	
+	
+
+void LoadBufferState(int id, vector<int>& loadOrder) {
+    unique_lock UL1(m1);
+
+    auto deadline = steady_clock::now() + microseconds(MaxTimePart);
+
+    while(checkOrder(loadOrder)){ // check if loadOrder has any part available to continue loading in loops even if it has partially loaded
+
+        if(cv_buff_part.wait_until(UL1, deadline, [&loadOrder](){return CheckBufferStatePart(currentBufferState, loadOrder);})) //predicate to check if load Order can be loaded into current buffer
+        {
+            {
+                lock_guard LG1(m2);
+                cout << endl;
+                cout << "part worker id " << id;
+                cout << " loadOrder value: ";
+                for (auto i : loadOrder) {
+                    cout << i << " ";
+                }
+                cout << endl;
+            }
+            for (int i = 0; i < currentBufferState.size(); i++) {    // load operation in buffer
+                int remainingSpace = maxBufferState[i] - currentBufferState[i];
+                if (remainingSpace > 0 && loadOrder[i] > 0) {
+
+                    int amount_to_load = min(remainingSpace, loadOrder[i]);
+                    currentBufferState[i] += amount_to_load;
+                    loadOrder[i] -= amount_to_load;
+                }
+            }
+            {
+                lock_guard LG2(m2);
+                cout << endl;
+                cout << "part worker " << id;
+                cout << " CurrentBufferState: ";
+                for (auto i : currentBufferState) {
+                    cout << i << " ";
+                }
+                cout << endl;
+                cout << "loadOrder Updated ";
+                for (auto i : loadOrder) {
+                    cout << i << " ";
+                }
+                cout << endl;
+            }
+
+
+            cv_buff_part.notify_all(); // notify part worker
+            cv_buff_product.notify_all(); // notify product worker
+        }
+        else{
+            {
+                lock_guard LG1(m2);
+                cout << endl;
+                cout << "Timeout Occurred for part worker: " << id << endl;
+                cout << endl;
+            }
+            return;
+        }
+    }
+    lock_guard LG2(m2);
+    cout << "Cannot update again: part worker : " << id << endl;
+
+}
+
+//Suporting functions for checking buffer and loadOrder
+
+bool CheckBufferStatePart(vector<int>& currentBufferState,vector<int>& loadOrder) {
+    for (int i = 0; i < currentBufferState.size(); ++i) {
+        if (currentBufferState[i] < maxBufferState[i] && loadOrder[i]>0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool checkOrder(vector<int>&order){
+    for(auto i: order){
+        if(i>0)return true;
+    }
+    return false;
+}
