@@ -34,6 +34,7 @@ public:
 mutex m1, m2, m3;
 condition_variable cv_buff_part, cv_buff_product;
 const int MaxTimePart{30000}, MaxTimeProduct{28000};
+int maxIteration = 5;
 vector<int> maxBufferState = {7, 6, 5, 5, 4};
 vector<int> currentBufferState(5, 0);
 vector<int> manufactureWait = {500, 500, 600, 600, 700};
@@ -62,13 +63,11 @@ void AssembleParts(vector<int>& cartState, vector<int>&localState);
 int main() {
 
 
-    const int m = 2, n = 2; //m: number of Part Workers
+    const int m = 20, n = 16; //m: number of Part Workers
     //n: number of Product Workers
     //Different numbers might be used during grading.
     vector<thread> PartW, ProductW;
     {
-        thread t1(PartWorker,1);
-        t1.join();
         Timer TT;
         for (int i = 0; i < m; ++i) {
 
@@ -80,13 +79,11 @@ int main() {
         for (auto &i: PartW) i.join();
         for (auto &i: ProductW) i.join();
     }
+    cout<<"Final value of total products assembled is: "<<totalProducts<<endl;
     cout << "Finish!" << endl;
-
-
 
     return 0;
 }
-
 
 vector<int> ProduceLoadOrder(vector<int> unloadedOrders) {
 
@@ -148,7 +145,6 @@ vector<int> ProducePickupOrder(vector<int> localState) {
     return pickUpOrder;
 }
 
-
 bool CheckBufferStatePart(vector<int> &currentBufferState, vector<int> &loadOrder) {
     for (int i = 0; i < currentBufferState.size(); ++i) {
         if (currentBufferState[i] < maxBufferState[i] && loadOrder[i] > 0) {
@@ -170,8 +166,8 @@ void LoadBufferState(int id, vector<int> &loadOrder, int &iteration) {
     auto deadline = steady_clock::now() + microseconds(MaxTimePart);
     auto start_time = steady_clock::now();
     steady_clock::duration total_wait_time = microseconds(0);
-    unique_lock UL1(m1);
     while (checkOrder(loadOrder)) {
+        unique_lock UL1(m1);
 
         if (cv_buff_part.wait_until(UL1, deadline, [&loadOrder]() {
             return CheckBufferStatePart(currentBufferState, loadOrder);
@@ -180,7 +176,7 @@ void LoadBufferState(int id, vector<int> &loadOrder, int &iteration) {
             total_wait_time += end_time - start_time;
             start_time = steady_clock::now();
             {
-                lock_guard LG1(m2);
+
                 cout << endl;
                 cout << "Iteration for part worker: " << id << " is : " << iteration + 1 << endl;
                 cout << "part worker id " << id;
@@ -206,7 +202,7 @@ void LoadBufferState(int id, vector<int> &loadOrder, int &iteration) {
                 }
             }
             {
-                lock_guard LG2(m2);
+
 
                 cout << "UpdatedBufferState: ";
                 for (auto i: currentBufferState) {
@@ -228,13 +224,14 @@ void LoadBufferState(int id, vector<int> &loadOrder, int &iteration) {
             auto end_time = steady_clock::now();
             total_wait_time += end_time - start_time;
             {
-                lock_guard LG1(m2);
+
+                cout<<endl;
                 cout << "Timeout Occurred for part worker: " << id << endl;
-                cout << "Thread " << id << " waited for " << duration_cast<microseconds>(total_wait_time).count()
+                cout << "Thread for part: " << id << " waited for " << duration_cast<microseconds>(total_wait_time).count()
                      << "us before timing out" << endl;
             }
             {
-                lock_guard LG1(m2);
+
                 cout << "Iteration for part worker: " << id << " is : " << iteration + 1 << endl;
                 cout << "part worker id " << id;
                 cout << " loadOrder value: ";
@@ -248,7 +245,9 @@ void LoadBufferState(int id, vector<int> &loadOrder, int &iteration) {
                 }
                 cout << endl;
             }
-            if (iteration < 4) {
+            cv_buff_part.notify_all();
+            cv_buff_product.notify_all();
+            if (iteration < maxIteration-1) {
                 UL1.unlock();
                 LoadBufferState(id, loadOrder, ++iteration);
             }
@@ -258,17 +257,14 @@ void LoadBufferState(int id, vector<int> &loadOrder, int &iteration) {
     cv_buff_part.notify_all();
     cv_buff_product.notify_all();
     {
-        lock_guard LG2(m2);
-
-        cout << "Thread " << id << " completed iteration " << iteration + 1 << " with a total wait time of "
+        cout << "Thread for part: " << id << " completed iteration " << iteration + 1 << " with a total wait time of "
              << duration_cast<microseconds>(total_wait_time).count() << "us" << endl;
     }
 
-    if (iteration < 4) {
-        UL1.unlock();
+    if (iteration < maxIteration - 1) {
+        //UL1.unlock();
         LoadBufferState(id, loadOrder, ++iteration);
     } else {
-        lock_guard LG2(m2);
         cout << "Cannot update again: part worker : " << id << endl;
     }
 }
@@ -290,8 +286,8 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
     auto start_time = steady_clock::now();
 
     steady_clock::duration total_wait_time = microseconds(0);
-    unique_lock UL1(m1);
     while (checkOrder(pickUpOrder)) {
+        unique_lock UL1(m1);
 
         if (cv_buff_part.wait_until(UL1, deadline, [&pickUpOrder]() {
             return CheckBufferStateProduct(currentBufferState, pickUpOrder);
@@ -301,7 +297,7 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
             start_time = steady_clock::now();
 
             {
-                lock_guard LG1(m2);
+
                 cout << endl;
                 cout << "Iteration for product worker: " << id << " is : " << iteration + 1 << endl;
                 cout << "product worker id " << id;
@@ -337,7 +333,7 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
                 }
             }
             {
-                lock_guard LG2(m2);
+
                 cout << "UpdatedBufferState: ";
                 for (auto i: currentBufferState) {
                     cout << i << " ";
@@ -368,9 +364,10 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
             total_wait_time += end_time - start_time;
 
             {
-                lock_guard LG1(m2);
+
+                cout<<endl;
                 cout << "Timeout Occurred for product worker: " << id << endl;
-                cout << "Thread " << id << " waited for " << duration_cast<microseconds>(total_wait_time).count()
+                cout << "Thread for product: " << id << " waited for " << duration_cast<microseconds>(total_wait_time).count()
                      << "us before timing out" << endl;
             }
             {
@@ -378,7 +375,7 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
                     localState[i]+=cartState[i];
                     cartState[i]=0;
                 }
-                lock_guard LG1(m2);
+
                 cout << "Iteration for product worker: " << id << " is : " << iteration + 1 << endl;
                 cout << "product worker id " << id;
                 cout << " pickUpOrder value: ";
@@ -402,10 +399,9 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
                 }
                 cout << endl;
             }
-            if (iteration < 4) {
-
-                cv_buff_part.notify_all();
-                cv_buff_product.notify_all();
+            cv_buff_part.notify_all();
+            cv_buff_product.notify_all();
+            if (iteration < maxIteration - 1) {
                 UL1.unlock();
                 UnloadBufferState(id, pickUpOrder, ++iteration,cartState,localState);
             }
@@ -414,22 +410,24 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
     }
 
     {
-        lock_guard LG2(m2);
-        cout << "Thread " << id << " completed iteration " << iteration + 1 << " with a total wait time of "
+
+        cout << "Thread for product: " << id << " completed iteration " << iteration + 1 << " with a total wait time of "
              << duration_cast<microseconds>(total_wait_time).count() << "ms" << endl;
     }
     AssembleParts(cartState,localState);
-    if (iteration < 4) {
-        totalProducts++;
+    totalProducts++;
+    cv_buff_part.notify_all();
+    cv_buff_product.notify_all();
+    if (iteration < maxIteration - 1) {
         {
-            lock_guard LG2(m2);
+
             cout << "Total Products assembled: " << totalProducts << endl;
         }
-        UL1.unlock();
+        //UL1.unlock();
         UnloadBufferState(id, pickUpOrder, ++iteration,cartState,localState);
     } else {
 
-        lock_guard LG2(m2);
+
         cout << "Cannot update again: product worker : " << id << endl;
     }
 

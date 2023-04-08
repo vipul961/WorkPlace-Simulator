@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="Plant_Simulation"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Plant_Simulation">
+				<Option output="C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Plant_Simulation.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++"/>
+					<Add directory="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/x86_64-w64-mingw32"/>
+					<Add directory="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/backward"/>
+					<Add directory="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include"/>
+					<Add directory="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/../../../../include"/>
+					<Add directory="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include-fixed"/>
+					<Add directory="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/../../../../x86_64-w64-mingw32/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 Plant_Simulation"/>
+					<CompileFile command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Plant_Simulation/fast">
+				<Option output="C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Plant_Simulation.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++"/>
+					<Add directory="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/x86_64-w64-mingw32"/>
+					<Add directory="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/backward"/>
+					<Add directory="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include"/>
+					<Add directory="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/../../../../include"/>
+					<Add directory="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/include-fixed"/>
+					<Add directory="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/../../../../x86_64-w64-mingw32/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 Plant_Simulation/fast"/>
+					<CompileFile command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/Users/vipul/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/223.8617.54/bin/mingw/bin/mingw32-make.exe -f &quot;C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/main.cpp">
+			<Option target="Plant_Simulation"/>
+		</Unit>
+		<Unit filename="C:/Users/vipul/OneDrive - Syracuse University/Documents/Parallel Processing/Workplace-Simulator/Plant_Simulation/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
