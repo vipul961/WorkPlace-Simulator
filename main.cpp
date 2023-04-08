@@ -178,9 +178,7 @@ void LoadBufferState(int id, vector<int> &loadOrder, int &iteration) {
         })) {
             auto t2 = system_clock::now();
             elapsed += duration_cast<microseconds>(t2 - t1);
-            t2 = system_clock::now();
             cout<<"Wait time: "<< duration_cast<microseconds>(elapsed).count()<<" us"<<endl;
-
             for (int i = 0; i < currentBufferState.size(); i++) {
                 int remainingSpace = maxBufferState[i] - currentBufferState[i];
                 if (remainingSpace > 0 && loadOrder[i] > 0) {
@@ -194,13 +192,15 @@ void LoadBufferState(int id, vector<int> &loadOrder, int &iteration) {
             cv_buff_product.notify_all();
             auto t3 = system_clock::now();
             elapsed += duration_cast<microseconds>(t3 - t2);
-            deadline = system_clock::now() + microseconds (MaxTimePart) - elapsed;
+            //deadline = system_clock::now() + microseconds (MaxTimePart) - elapsed;
+            deadline = deadline - elapsed;
             cout<<"new deadline "<<duration_cast<microseconds>(deadline-system_clock::now()).count()<<" us"<<endl;
 
         } else {
             auto t2 = system_clock::now();
-            elapsed += duration_cast<microseconds>(t2 - t1);
-            cout<<"Wait time before timeout: "<< duration_cast<microseconds>(elapsed).count()<<" us"<<endl;
+            cout<<"Wait time before timeout: "<< duration_cast<microseconds>(t2-t1-elapsed).count()<<" us"<<endl;
+
+
             cv_buff_part.notify_all();
             cv_buff_product.notify_all();
             UL1.unlock();
@@ -305,3 +305,5 @@ void PartWorker(int id) {
     LoadBufferState(id, loadOrder, iteration);
 
 }
+
+//Test the git push
