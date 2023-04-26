@@ -38,16 +38,19 @@ public:
 mutex m1, m2,m3;
 system_clock::duration elapsed_time(microseconds(0));
 condition_variable cv_buff_part, cv_buff_product;
-atomic<int> c_wait{ 0 }, p_wait{ 0 };//p_completed{ 0 }, c_completed{ 0 };
-const int MaxTimePart{10000}, MaxTimeProduct{5000};
+const int MaxTimePart{30000}, MaxTimeProduct{28000};
 int maxIteration = 5;
 vector<int> maxBufferState = {7, 6, 5, 5, 4};
 vector<int> currentBufferState(5, 0);
-vector<int> unusedParts(5,0);
-vector<int>unusedProducts(5,0);
+vector<int> unusedParts(5, 0);
+vector<int> unusedProducts(5, 0);
 vector<int> manufactureWait = {500, 500, 600, 600, 700};
 vector<int> bufferWait = {200, 200, 300, 300, 400};
 vector<int> assemblyWait = {600, 600, 700, 700, 800};
+vector<int> partCost = {1,1,1,1,1};
+vector<int> productCost = {1,1,1,1,1};
+atomic<int> totalPartCost{ 0 }, totalProductCost{ 0 };
+int partCount = 0,bufferCount=0;
 
 atomic<int> totalProducts;
 system_clock ::time_point startSimulation;
@@ -70,13 +73,14 @@ void PartWorker(int id);
 
 void AssembleParts(vector<int>& cartState, vector<int>&localState);
 
+
 ostream& operator<<(ostream& os, const vector<int>& vec);
 ofstream Out("logfile.txt");
 
 int main() {
 
 
-    const int m = 100, n = 60; //m: number of Part Workers
+    const int m = 20, n = 16; //m: number of Part Workers
     //n: number of Product Workers
     //Different numbers might be used during grading.
     vector<thread> PartW, ProductW;
@@ -93,14 +97,25 @@ int main() {
         for (auto &i: ProductW) i.join();
     }
 
-    Out<<"Unused parts: "<<unusedParts<<endl;
-    Out<<"Unused products: "<<unusedProducts<<endl;
+    for(int i=0;i<unusedParts.size();i++){
+        totalPartCost+=((currentBufferState[i]+unusedParts[i])*partCost[i]);
+        totalProductCost+=(unusedProducts[i]*productCost[i]);
+    }
+    cout<<"Total cost of parts: "<<totalPartCost<<endl;
+    cout<<unusedParts<<endl;
+    cout<<"Total cost of products: "<<totalProductCost<<endl;
+    cout<<unusedProducts<<endl;
+    for(auto i:currentBufferState){
+        partCount+=i;
+    }
+    cout<<"Total parts produced: "<<partCount<<endl;
+    cout<<"Buffer Count: "<<bufferCount<<endl;
     Out<<"Final value of total products assembled is: "<<totalProducts<<endl;
     Out << "Finish!" << endl;
-
     Out.close();
     return 0;
 }
+
 
 vector<int> ProduceLoadOrder(vector<int> unloadedOrders) {
 
@@ -110,15 +125,36 @@ vector<int> ProduceLoadOrder(vector<int> unloadedOrders) {
     for (auto i: unloadedOrders) {
         presentOrderItems += i;
     }
-
     int remainingParts = fixedOrderItemLimit - presentOrderItems;
+    m3.lock();
+    partCount+=remainingParts;
+    m3.unlock();
+
     while (remainingParts != 0) {
-        srand(system_clock::now().time_since_epoch().count());
-        int randNumParts = rand() % (remainingParts);
-        int partType = rand() % 5;
-        this_thread::sleep_for(randNumParts * microseconds(manufactureWait[partType]));
-        loadOrder[partType] += ++randNumParts;
-        remainingParts -= randNumParts;
+//        if(any_of(unusedParts.begin(), unusedParts.end(), [](int x) {
+//            return x != 0;
+//        }))
+//        {
+//            lock_guard LG2(m3);
+//            pair<int,int> maxUnusedPart({0,0});
+//            for(int i=0;i<unusedParts.size();i++){
+//                if(unusedParts[i]>maxUnusedPart.first){
+//                    maxUnusedPart.first = unusedParts[i];
+//                    maxUnusedPart.second = i;
+//                }
+//            }
+//            int amount = min(maxUnusedPart.first,remainingParts);
+//            loadOrder[maxUnusedPart.second]+=amount;
+//            remainingParts-=amount;
+//            unusedParts[maxUnusedPart.second]-=amount;
+//        }else{
+            srand(system_clock::now().time_since_epoch().count());
+            int randNumParts = rand() % (remainingParts);
+            int partType = rand() % 5;
+            this_thread::sleep_for(randNumParts * microseconds(manufactureWait[partType]));
+            loadOrder[partType] += ++randNumParts;
+            remainingParts -= randNumParts;
+        //}
     }
     return loadOrder;
 }
@@ -126,7 +162,6 @@ vector<int> ProduceLoadOrder(vector<int> unloadedOrders) {
 vector<int> ProducePickupOrder(vector<int> localState) {
     vector<int> pickUpOrder(localState);
 
-    //Out<<endl;
     int fixedOrderItemLimit = 5;
     int presentOrderItems = 0;
     unordered_map<int, int> partNum;
@@ -200,7 +235,7 @@ void LoadBufferState(int id, vector<int> &loadOrder, int &iterationPart) {
             }
             auto t2 = system_clock ::now();
             accumulatedTime += (t2-t1);
-            lock_guard LG1(m2);
+
             {
                 Out << "Current Time: "<< duration_cast<microseconds>(t2-startSimulation).count() <<" us"<< endl;
                 Out << "Iteration: " << iterationPart + 1 << endl;
@@ -223,6 +258,8 @@ void LoadBufferState(int id, vector<int> &loadOrder, int &iterationPart) {
                     this_thread::sleep_for(microseconds(bufferWait[i]) * amount_to_load);
                     currentBufferState[i] += amount_to_load;
                     loadOrder[i] -= amount_to_load;
+                    //totalPartCost+=(amount_to_load*partCost[i]);
+                    bufferCount+=amount_to_load;
                 }
             }
             {
@@ -232,19 +269,18 @@ void LoadBufferState(int id, vector<int> &loadOrder, int &iterationPart) {
                 Out<<loadOrder<<endl;
                 Out << endl;
             }
-            auto t3 = system_clock ::now();
-            accumulatedTime += (t3 - t2);
             cv_buff_product.notify_all();
             cv_buff_part.notify_all();
+            auto t3 = system_clock ::now();
+            accumulatedTime += (t3 - t2);
         } else {
             timeoutPart = true;
             break;
         }
     }
-    cv_buff_product.notify_all();
     cv_buff_part.notify_all();
-    UL1.unlock();
-    lock_guard LG1(m2);
+    cv_buff_product.notify_all();
+    //UL1.unlock();
     if(timeoutPart){
         deadlineTime = deadline - system_clock::now();
         {
@@ -296,7 +332,6 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
             }
             auto t2 = system_clock ::now();
             accumulatedTime+= t2-t1;
-            lock_guard LG1(m2);
             {
                 Out << "Current Time: "<< duration_cast<microseconds>(t2-startSimulation).count() <<" us"<< endl;
                 Out << "Iteration: " << iteration + 1 << endl;
@@ -320,6 +355,7 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
                     currentBufferState[i] -= amount_to_unload;
                     pickUpOrder[i] -= amount_to_unload;
                     cartState[i] += amount_to_unload;
+                    totalProductCost+=(amount_to_unload*productCost[i]);
                 }
             }
             {
@@ -329,10 +365,10 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
                 Out << "Updated Cart State: "<<cartState<<endl;
                 Out<<endl;
             }
-            auto t3 = system_clock ::now();
-            accumulatedTime += ( t3 - t2 );
             cv_buff_part.notify_all();
             cv_buff_product.notify_all();
+            auto t3 = system_clock ::now();
+            accumulatedTime += ( t3 - t2 );
         } else {
             timeoutProduct = true;
             break;
@@ -340,7 +376,6 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
     }
     cv_buff_part.notify_all();
     cv_buff_product.notify_all();
-    UL1.unlock();
     lock_guard LG1(m2);
     if(timeoutProduct){
         deadlineTime = deadline - system_clock::now();
@@ -383,7 +418,6 @@ void AssembleParts(vector<int> &cartState,vector<int>&localState) {
     }
 }
 
-
 void ProductWorker(int id) {
 
     vector<int> pickUpOrder(5,0),cartState(5,0),localState(5,0);
@@ -391,16 +425,12 @@ void ProductWorker(int id) {
     while(iteration<maxIteration){
         UnloadBufferState(id, pickUpOrder, iteration,cartState,localState);
     }
-    lock_guard LG2(m2);
-    for(int i=0;i<cartState.size();i++){
+    for(int i=0;i<localState.size();i++){
+        unusedProducts[i]+=localState[i];
         unusedProducts[i]+=cartState[i];
-        cartState[i]=0;
-        unusedProducts[i]+= localState[i];
         localState[i]=0;
+        cartState[i]=0;
     }
-    Out<<endl;
-    Out<<"Unused products: "<<unusedProducts<<endl;
-    Out<<endl;
 }
 
 void PartWorker(int id) {
@@ -409,15 +439,10 @@ void PartWorker(int id) {
     while(iterationPart<maxIteration){
         LoadBufferState(id, loadOrder, iterationPart);
     }
-    lock_guard LG2(m2);
     for(int i=0;i<loadOrder.size();i++){
         unusedParts[i]+=loadOrder[i];
         loadOrder[i]=0;
     }
-
-    Out<<endl;
-    Out<<"Unused parts: "<<unusedParts<<endl;
-    Out<<endl;
 }
 
 ostream& operator<<(ostream& os, const vector<int>& vec) {
