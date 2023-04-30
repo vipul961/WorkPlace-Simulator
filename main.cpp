@@ -2,7 +2,6 @@
 //347120278
 
 #pragma warning(disable: 4996)
-
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -36,22 +35,17 @@ public:
 };
 
 mutex m1, m2,m3;
-system_clock::duration elapsed_time(microseconds(0));
 condition_variable cv_buff_part, cv_buff_product;
-const int MaxTimePart{30000}, MaxTimeProduct{28000};
+const int MaxTimePart{60000}, MaxTimeProduct{30000};
 int maxIteration = 5;
 vector<int> maxBufferState = {7, 6, 5, 5, 4};
 vector<int> currentBufferState(5, 0);
 vector<int> unusedParts(5, 0);
-vector<int> unusedProducts(5, 0);
+vector<int> unusedProductParts(5, 0);
 vector<int> manufactureWait = {500, 500, 600, 600, 700};
 vector<int> bufferWait = {200, 200, 300, 300, 400};
 vector<int> assemblyWait = {600, 600, 700, 700, 800};
-vector<int> partCost = {1,1,1,1,1};
-vector<int> productCost = {1,1,1,1,1};
-atomic<int> totalPartCost{ 0 }, totalProductCost{ 0 };
-int partCount = 0,bufferCount=0;
-
+int partCount=0,bufferCount=0,wasteParts=0,bufferSub=0,wasteProductParts=0,reusedParts=0,reusedProductParts=0;
 atomic<int> totalProducts;
 system_clock ::time_point startSimulation;
 
@@ -73,49 +67,81 @@ void PartWorker(int id);
 
 void AssembleParts(vector<int>& cartState, vector<int>&localState);
 
+void refresh();
 
 ostream& operator<<(ostream& os, const vector<int>& vec);
+ofstream Out1("logData.txt");
 ofstream Out("logfile.txt");
-
 int main() {
 
-
-    const int m = 20, n = 16; //m: number of Part Workers
-    //n: number of Product Workers
-    //Different numbers might be used during grading.
-    vector<thread> PartW, ProductW;
-    {
-        Timer TT;
-        startSimulation = system_clock ::now();
-        for (int i = 0; i < m; ++i) {
-            PartW.emplace_back(PartWorker, i + 1);
+    Out1<<"Total parts|";
+    Out1<<"BufferCount|";
+    Out1<<"Parts picked from buffer|";
+    Out1<<"Parts in buffer|";
+    Out1<<"UnusedProductParts|";
+    Out1<<"UnusedParts|";
+    Out1<<"Waste parts|";
+    Out1<<"Waste product parts|";
+    Out1<<"ReusedParts|";
+    Out1<<"ReusedProductParts|";
+    Out1<<"Total Products created"<<endl;
+    for(int run=0;run<10;run++){
+        Out.open("logfile.txt");
+        const int m = 20, n = 16; //m: number of Part Workers
+        //n: number of Product Workers
+        //Different numbers might be used during grading.
+        vector<thread> PartW, ProductW;
+        {
+            Timer TT;
+            startSimulation = system_clock ::now();
+            for (int i = 0; i < m; ++i) {
+                PartW.emplace_back(PartWorker, i + 1);
+            }
+            for (int i = 0; i < n; ++i) {
+                ProductW.emplace_back(ProductWorker, i + 1);
+            }
+            for (auto &i: PartW) i.join();
+            for (auto &i: ProductW) i.join();
         }
-        for (int i = 0; i < n; ++i) {
-            ProductW.emplace_back(ProductWorker, i + 1);
+        Out<<"Final value of total products assembled is: "<<totalProducts<<endl;
+        Out << "Finish!" << endl;
+
+        int temp=0;
+        for(auto i:currentBufferState){
+            temp+=i;
         }
-        for (auto &i: PartW) i.join();
-        for (auto &i: ProductW) i.join();
+
+        Out1<<partCount<<"|";
+        Out1<<bufferCount<<"|";
+        Out1<<bufferSub<<"|";
+        Out1<<temp<<"|";
+        Out1<<unusedProductParts<<"|";
+        Out1<<unusedParts<<"|";
+        Out1<<wasteParts<<"|";
+        Out1<<wasteProductParts<<"|";
+        Out1<<reusedParts<<"|";
+        Out1<<reusedProductParts<<"|";
+        Out1<<totalProducts<<endl;
+
+        Out.close();
+        refresh();
+        currentBufferState = vector<int>(5,0);
+        unusedParts = vector<int>(5,0);
+        unusedProductParts = vector<int>(5,0);
+        //this_thread::sleep_for(1s);
     }
 
-    for(int i=0;i<unusedParts.size();i++){
-        totalPartCost+=((currentBufferState[i]+unusedParts[i])*partCost[i]);
-        totalProductCost+=(unusedProducts[i]*productCost[i]);
-    }
-    cout<<"Total cost of parts: "<<totalPartCost<<endl;
-    cout<<unusedParts<<endl;
-    cout<<"Total cost of products: "<<totalProductCost<<endl;
-    cout<<unusedProducts<<endl;
-    for(auto i:currentBufferState){
-        partCount+=i;
-    }
-    cout<<"Total parts produced: "<<partCount<<endl;
-    cout<<"Buffer Count: "<<bufferCount<<endl;
-    Out<<"Final value of total products assembled is: "<<totalProducts<<endl;
-    Out << "Finish!" << endl;
-    Out.close();
+    Out1.close();
     return 0;
 }
 
+void refresh(){
+    currentBufferState = vector<int>(5,0);
+    unusedParts = vector<int>(5,0);
+    unusedProductParts = vector<int>(5,0);
+    partCount=0,bufferCount=0,wasteParts=0,bufferSub=0,wasteProductParts=0,reusedParts=0,reusedProductParts=0;
+    totalProducts = 0;
+}
 
 vector<int> ProduceLoadOrder(vector<int> unloadedOrders) {
 
@@ -125,36 +151,37 @@ vector<int> ProduceLoadOrder(vector<int> unloadedOrders) {
     for (auto i: unloadedOrders) {
         presentOrderItems += i;
     }
+
     int remainingParts = fixedOrderItemLimit - presentOrderItems;
-    m3.lock();
-    partCount+=remainingParts;
-    m3.unlock();
 
     while (remainingParts != 0) {
-//        if(any_of(unusedParts.begin(), unusedParts.end(), [](int x) {
-//            return x != 0;
-//        }))
-//        {
-//            lock_guard LG2(m3);
-//            pair<int,int> maxUnusedPart({0,0});
-//            for(int i=0;i<unusedParts.size();i++){
-//                if(unusedParts[i]>maxUnusedPart.first){
-//                    maxUnusedPart.first = unusedParts[i];
-//                    maxUnusedPart.second = i;
-//                }
-//            }
-//            int amount = min(maxUnusedPart.first,remainingParts);
-//            loadOrder[maxUnusedPart.second]+=amount;
-//            remainingParts-=amount;
-//            unusedParts[maxUnusedPart.second]-=amount;
-//        }else{
+        if (any_of(unusedParts.begin(), unusedParts.end(), [](int x) {
+            return x != 0;
+        })) {
+            lock_guard LG2(m3);
+            pair<int, int> maxUnusedPart({0, 0});
+            for (int i = 0; i < unusedParts.size(); i++) {
+                if (unusedParts[i] > maxUnusedPart.first) {
+                    maxUnusedPart.first = unusedParts[i];
+                    maxUnusedPart.second = i;
+                }
+            }
+            int amount = min(maxUnusedPart.first, remainingParts);
+            reusedParts+=amount;
+            loadOrder[maxUnusedPart.second] += amount;
+            remainingParts -= amount;
+            unusedParts[maxUnusedPart.second] -= amount;
+        } else {
             srand(system_clock::now().time_since_epoch().count());
             int randNumParts = rand() % (remainingParts);
             int partType = rand() % 5;
             this_thread::sleep_for(randNumParts * microseconds(manufactureWait[partType]));
             loadOrder[partType] += ++randNumParts;
             remainingParts -= randNumParts;
-        //}
+            m3.lock();
+            partCount+=randNumParts;
+            m3.unlock();
+        }
     }
     return loadOrder;
 }
@@ -162,6 +189,7 @@ vector<int> ProduceLoadOrder(vector<int> unloadedOrders) {
 vector<int> ProducePickupOrder(vector<int> localState) {
     vector<int> pickUpOrder(localState);
 
+    //Out<<endl;
     int fixedOrderItemLimit = 5;
     int presentOrderItems = 0;
     unordered_map<int, int> partNum;
@@ -258,7 +286,6 @@ void LoadBufferState(int id, vector<int> &loadOrder, int &iterationPart) {
                     this_thread::sleep_for(microseconds(bufferWait[i]) * amount_to_load);
                     currentBufferState[i] += amount_to_load;
                     loadOrder[i] -= amount_to_load;
-                    //totalPartCost+=(amount_to_load*partCost[i]);
                     bufferCount+=amount_to_load;
                 }
             }
@@ -348,6 +375,13 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
                 Out << "Cart State: "<<cartState<<endl;
             }
             for (int i = 0; i < currentBufferState.size(); i++) {
+                if(unusedProductParts[i]>0 && pickUpOrder[i]>0){
+                    int amount_to_unload = min(unusedProductParts[i], pickUpOrder[i]);
+                    pickUpOrder[i] -= amount_to_unload;
+                    unusedProductParts[i]-=amount_to_unload;
+                    cartState[i] += amount_to_unload;
+                    reusedProductParts+=amount_to_unload;
+                }
                 int availableSpace = currentBufferState[i];
                 if (availableSpace > 0 && pickUpOrder[i] > 0) {
                     int amount_to_unload = min(availableSpace, pickUpOrder[i]);
@@ -355,7 +389,7 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
                     currentBufferState[i] -= amount_to_unload;
                     pickUpOrder[i] -= amount_to_unload;
                     cartState[i] += amount_to_unload;
-                    totalProductCost+=(amount_to_unload*productCost[i]);
+                    bufferSub+=amount_to_unload;
                 }
             }
             {
@@ -376,7 +410,7 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
     }
     cv_buff_part.notify_all();
     cv_buff_product.notify_all();
-    lock_guard LG1(m2);
+    //lock_guard LG1(m2);
     if(timeoutProduct){
         deadlineTime = deadline - system_clock::now();
         {
@@ -407,6 +441,7 @@ void UnloadBufferState(int id, vector<int> &pickUpOrder, int &iteration,vector<i
     Out << "Updated Cart State: "<<cartState<<endl;
     Out<<"Total Completed Products: "<<totalProducts<<endl;
     Out<<endl;
+
     iteration++;
 }
 
@@ -418,6 +453,7 @@ void AssembleParts(vector<int> &cartState,vector<int>&localState) {
     }
 }
 
+
 void ProductWorker(int id) {
 
     vector<int> pickUpOrder(5,0),cartState(5,0),localState(5,0);
@@ -425,12 +461,15 @@ void ProductWorker(int id) {
     while(iteration<maxIteration){
         UnloadBufferState(id, pickUpOrder, iteration,cartState,localState);
     }
+    m3.lock();
     for(int i=0;i<localState.size();i++){
-        unusedProducts[i]+=localState[i];
-        unusedProducts[i]+=cartState[i];
-        localState[i]=0;
-        cartState[i]=0;
+        wasteProductParts+= localState[i];
+        wasteProductParts+= cartState[i];
+        unusedProductParts[i]+=localState[i];
+        unusedProductParts[i]+=cartState[i];
     }
+    m3.unlock();
+
 }
 
 void PartWorker(int id) {
@@ -439,10 +478,13 @@ void PartWorker(int id) {
     while(iterationPart<maxIteration){
         LoadBufferState(id, loadOrder, iterationPart);
     }
+    m3.lock();
     for(int i=0;i<loadOrder.size();i++){
         unusedParts[i]+=loadOrder[i];
+        wasteParts+=loadOrder[i];
         loadOrder[i]=0;
     }
+    m3.unlock();
 }
 
 ostream& operator<<(ostream& os, const vector<int>& vec) {
